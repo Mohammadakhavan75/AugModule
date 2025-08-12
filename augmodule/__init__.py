@@ -4,6 +4,7 @@ from .modules.rotation import Rotate, RandomRotate
 from .modules.noise import GaussianNoise
 from .modules.jpeg import JpegCompression
 from .modules.crop_resize import RandomCropResize
+from .modules.blur import GaussianBlur, RandomGaussianBlur
 
 
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     "GaussianNoise",
     "JpegCompression",
     "RandomCropResize",
+    "GaussianBlur", "RandomGaussianBlur"
 ]
 __version__ = "0.1.0"
