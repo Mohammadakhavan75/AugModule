@@ -5,7 +5,7 @@ from .modules.noise import GaussianNoise
 from .modules.jpeg import JpegCompression
 from .modules.crop_resize import RandomCropResize
 from .modules.blur import GaussianBlur, RandomGaussianBlur
-
+from .modules.color import ColorJitter
 
 __all__ = [
     "GlassBlur",
@@ -14,6 +14,7 @@ __all__ = [
     "GaussianNoise",
     "JpegCompression",
     "RandomCropResize",
-    "GaussianBlur", "RandomGaussianBlur"
+    "GaussianBlur", "RandomGaussianBlur",
+    "ColorJitter"
 ]
 __version__ = "0.1.0"
