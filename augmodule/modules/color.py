@@ -1,89 +1,10 @@
 # augmodule/modules/color.py
 from __future__ import annotations
 from typing import Tuple, Optional, List
-import math
 import torch
 import torch.nn as nn
+from ..functional import _to_float, _rgb_to_gray, _adjust_brightness, _adjust_contrast, _adjust_saturation, _adjust_hue_yiq, _ensure_tuple
 from ..base import AugBase
-
-# Luma weights (ITU-R BT.601) used by torchvision
-_WEIGHTS = (0.2989, 0.5870, 0.1140)
-
-def _to_float(x: torch.Tensor) -> torch.Tensor:
-    return x if x.dtype in (torch.float32, torch.float64) else x.to(torch.float32)
-
-def _rgb_to_gray(x: torch.Tensor) -> torch.Tensor:
-    # x: [B,3,H,W] float
-    r, g, b = x[:, 0:1], x[:, 1:2], x[:, 2:3]
-    y = r * _WEIGHTS[0] + g * _WEIGHTS[1] + b * _WEIGHTS[2]
-    return y  # [B,1,H,W]
-
-def _adjust_brightness(x: torch.Tensor, factor: torch.Tensor) -> torch.Tensor:
-    # factor: [M] or [M,1,1,1] for broadcasting
-    return x * factor
-
-def _adjust_contrast(x: torch.Tensor, factor: torch.Tensor) -> torch.Tensor:
-    # Contrast via grayscale target (per-pixel), matches torchvision
-    gray = _rgb_to_gray(x)
-    gray = gray.expand_as(x)
-    return gray + factor * (x - gray)
-
-def _adjust_saturation(x: torch.Tensor, factor: torch.Tensor) -> torch.Tensor:
-    gray = _rgb_to_gray(x)
-    gray = gray.expand_as(x)
-    return gray * (1.0 - factor) + x * factor
-
-def _adjust_hue_yiq(x: torch.Tensor, delta: torch.Tensor) -> torch.Tensor:
-    """
-    Hue shift via rotation in the I-Q chroma plane of YIQ.
-    delta in [-0.5, 0.5] maps to [-180°, 180°], per torchvision semantics.
-    """
-    # Compute Y,I,Q from RGB
-    r, g, b = x[:, 0:1], x[:, 1:2], x[:, 2:3]
-    Y = 0.299 * r + 0.587 * g + 0.114 * b
-    I = 0.596 * r - 0.274 * g - 0.322 * b
-    Q = 0.211 * r - 0.523 * g + 0.312 * b
-
-    theta = delta * (2.0 * math.pi)  # radians
-    c = torch.cos(theta).view(-1, 1, 1, 1)
-    s = torch.sin(theta).view(-1, 1, 1, 1)
-
-    I2 = I * c - Q * s
-    Q2 = I * s + Q * c
-
-    # Back to RGB
-    R = Y + 0.956 * I2 + 0.621 * Q2
-    G = Y - 0.272 * I2 - 0.647 * Q2
-    B = Y - 1.106 * I2 + 1.703 * Q2
-    out = torch.cat([R, G, B], dim=1)
-    return out
-
-def _ensure_tuple(val, name: str, clip_zero: bool = False, hue: bool = False):
-    """
-    Normalize a jitter spec:
-      - float f -> (1-f, 1+f) (for brightness/contrast/saturation),
-      - float h -> (-h, +h) for hue (capped to [-0.5, 0.5]),
-      - tuple stays as-is.
-    """
-    if val is None:
-        return None
-    if isinstance(val, (tuple, list)):
-        if len(val) != 2:
-            raise ValueError(f"{name} tuple must be (min, max)")
-        lo, hi = float(val[0]), float(val[1])
-    else:
-        f = float(val)
-        if hue:
-            lo, hi = -f, +f
-        else:
-            lo, hi = (max(0.0, 1.0 - f), 1.0 + f)
-    if hue:
-        lo = max(-0.5, lo); hi = min(0.5, hi)
-    if not hue and clip_zero:
-        lo = max(0.0, lo)
-    if hi < lo:
-        raise ValueError(f"{name} range must satisfy min <= max, got ({lo}, {hi}).")
-    return (lo, hi)
 
 class ColorJitter(AugBase):
     """

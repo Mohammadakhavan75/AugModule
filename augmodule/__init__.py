@@ -1,4 +1,4 @@
-from .modules.glass_blur import GlassBlur
+from .modules.blur import GlassBlur
 from .modules.flip import Flip, RandomFlip
 from .modules.rotation import Rotate, RandomRotate
 from .modules.noise import GaussianNoise
