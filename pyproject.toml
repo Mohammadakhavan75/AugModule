@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "augmodule"
+version = "0.1.0"
+description = "nn.Module-based, device-portable augmentations for PyTorch"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [{name = "Your Name"}]
+dependencies = ["torch>=2.2"]
+
+[project.urls]
+Homepage = "https://github.com/your-org/AugModule"
+Issues = "https://github.com/your-org/AugModule/issues"
+
+[tool.setuptools.package-dir]
+"" = "."
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["augmodule*"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.5", "mypy>=1.8"]
+
+[tool.ruff]
+line-length = 100
