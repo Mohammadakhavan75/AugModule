@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 from ..base import AugBase
 
+
 class RandomGaussianNoise(AugBase):
     """
     Additive Gaussian noise with per-sample std drawn uniformly from [std_min, std_max].
